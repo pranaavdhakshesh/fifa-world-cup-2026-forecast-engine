@@ -1,0 +1,40 @@
+# FIFA World Cup 2026 Forecast Engine
+# Frozen environment — Matchday 2 snapshot (2026-06-23)
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# Python 3.9+ required.
+
+# ── Core data stack ────────────────────────────────────────────────────────
+numpy>=1.24,<2.0
+pandas>=2.0,<3.0
+pyarrow>=12.0          # required for .parquet I/O
+
+# ── Machine learning ───────────────────────────────────────────────────────
+scikit-learn>=1.3,<2.0
+xgboost>=1.7,<3.0
+joblib>=1.3            # model serialisation (bundled with sklearn, pinned explicitly)
+
+# ── Statistical utilities ─────────────────────────────────────────────────
+scipy>=1.11            # isotonic regression, calibration utilities
+
+# ── Visualisation ─────────────────────────────────────────────────────────
+matplotlib>=3.7
+seaborn>=0.12          # heatmaps and distribution plots in notebook 05
+
+# ── Notebook environment ───────────────────────────────────────────────────
+jupyter>=1.0
+notebook>=7.0
+ipython>=8.0
+ipykernel>=6.0
+
+# ── Progress bars ─────────────────────────────────────────────────────────
+tqdm>=4.65             # Monte Carlo simulation progress indicator
+
+# ── Testing ───────────────────────────────────────────────────────────────
+pytest>=8.0
+pytest-anyio>=0.0.0    # async test support (optional)
+
+# ── Utilities ─────────────────────────────────────────────────────────────
+pathlib2>=2.3; python_version < "3.9"   # backport — not needed on 3.9+
