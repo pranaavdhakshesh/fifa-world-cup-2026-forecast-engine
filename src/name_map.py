@@ -106,10 +106,13 @@ DS17_PLACEHOLDER_NAME_TO_CANONICAL: dict[str, str] = {
 #    this set to apply the missing-class flag.
 # ---------------------------------------------------------------------------
 WC_DEBUTANTS: frozenset[str] = frozenset({
-    "Bosnia-Herzegovina",
+    # Teams with no World Cup appearances since 1998 (WC_MODERN_START).
+    # Bosnia-Herzegovina: appeared in 2014 → NOT a modern debutant.
     "Cape Verde",
     "Congo DR",
     "Curaçao",
+    "Haiti",        # last WC 1974
+    "Iraq",         # last WC 1986
     "Jordan",
     "Uzbekistan",
 })

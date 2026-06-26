@@ -278,8 +278,8 @@ class TestWCDebutants:
         )
 
     def test_known_debutants_present(self):
-        expected = {"Bosnia-Herzegovina", "Cape Verde", "Congo DR", "Curaçao",
-                    "Jordan", "Uzbekistan"}
+        expected = {"Cape Verde", "Congo DR", "Curaçao",
+                    "Haiti", "Iraq", "Jordan", "Uzbekistan"}
         assert expected == WC_DEBUTANTS, (
             f"WC_DEBUTANTS mismatch. Expected {expected}, got {WC_DEBUTANTS}"
         )

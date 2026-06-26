@@ -210,8 +210,8 @@ def load_ds16(zip_path: str | Path) -> pd.DataFrame:
     df["away_team_id"]  = _to_numeric(df["away_team_id"])
     df["city_id"]       = _to_numeric(df["city_id"])
     df["stage_id"]      = _to_numeric(df["stage_id"])
-    # Parse kickoff; the timestamp includes UTC offset — .hour gives local hour
-    df["kickoff_at"]    = pd.to_datetime(df["kickoff_at"], errors="coerce", utc=False)
+    # Parse kickoff; mixed UTC offsets require utc=True to get a proper DatetimeTZDtype Series
+    df["kickoff_at"]    = pd.to_datetime(df["kickoff_at"], errors="coerce", utc=True)
     return df
 
 
@@ -335,16 +335,24 @@ def build_fifa_features(
     ----------
     elo_features : output of build_elo_features — provides Elo ranks for F013.
     """
-    # Filter to WC 48 teams
+    # Filter to WC 48 teams; deduplicate by keeping the highest-rated entry per canonical
+    # name (guards against alias collisions — e.g. "Congo" → "Congo DR" in non-WC sources)
     ds10_wc = ds10[ds10["team_canonical"].isin(CANONICAL_48)].copy()
+    ds10_wc = ds10_wc.sort_values("points", ascending=False).drop_duplicates(
+        subset="team_canonical", keep="first"
+    )
     ds10_wc = ds10_wc.set_index("team_canonical")
 
     if len(ds10_wc) != 48:
         missing = CANONICAL_48 - set(ds10_wc.index)
         raise ValueError(f"DS10 missing {len(missing)} WC teams: {sorted(missing)}")
 
-    # DS11 indexed by canonical name (may not contain all 48 if some are new federations)
-    ds11_idx = ds11[ds11["team_canonical"].isin(CANONICAL_48)].set_index("team_canonical")
+    # DS11 indexed by canonical name; deduplicate the same way as DS10
+    ds11_wc = ds11[ds11["team_canonical"].isin(CANONICAL_48)].copy()
+    ds11_wc = ds11_wc.sort_values("points", ascending=False).drop_duplicates(
+        subset="team_canonical", keep="first"
+    )
+    ds11_idx = ds11_wc.set_index("team_canonical")
 
     # Compute WC-field FIFA rank (rank within 48, for F013)
     ds10_wc["fifa_rank_in_wc_field"] = ds10_wc["points"].rank(ascending=False, method="min").astype(int)
@@ -365,10 +373,13 @@ def build_fifa_features(
     )
 
     # F013 — disagreement between Elo WC rank and FIFA WC rank (within 48-team field)
-    elo_rank_wc = elo_features["elo_rank_in_wc_field"].reindex(out.index)
-    out["elo_fifa_rank_disagreement"] = (
-        (elo_rank_wc - out["fifa_rank_in_wc_field"]).abs()
-    )
+    # elo_features may not have elo_rank_in_wc_field when called from build_training_rows
+    # (which passes WC historical features as the elo_features stub)
+    if "elo_rank_in_wc_field" in elo_features.columns:
+        elo_rank_wc = elo_features["elo_rank_in_wc_field"].reindex(out.index)
+        out["elo_fifa_rank_disagreement"] = (elo_rank_wc - out["fifa_rank_in_wc_field"]).abs()
+    else:
+        out["elo_fifa_rank_disagreement"] = np.nan
 
     return out.copy()
 
@@ -642,15 +653,12 @@ def build_tournament_features(
                      "away_formation"]
 
     ds1_shared = ds1[shared_cols + tactical_cols].copy()
-    # DS1-ext has no tactical columns → set them to NaN
-    ds1ext_ext = ds1ext[shared_cols].copy()
-    for col in tactical_cols:
-        ds1ext_ext[col] = np.nan
-
-    # yellow cards may not be in DS1-ext
-    if "home_cards_yellow" not in ds1ext.columns:
-        ds1ext_ext["home_cards_yellow"] = np.nan
-        ds1ext_ext["away_cards_yellow"] = np.nan
+    # DS1-ext has no tactical columns → select only present columns, fill rest with NaN
+    available = [c for c in shared_cols if c in ds1ext.columns]
+    ds1ext_ext = ds1ext[available].copy()
+    for col in shared_cols + tactical_cols:
+        if col not in ds1ext_ext.columns:
+            ds1ext_ext[col] = np.nan
 
     all_matches = pd.concat([ds1_shared, ds1ext_ext], ignore_index=True)
 

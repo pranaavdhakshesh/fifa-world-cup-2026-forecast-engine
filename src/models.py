@@ -546,11 +546,12 @@ class GroupStageModel:
             else:
                 self._xgb.fit(X.values, y, sample_weight=sw, verbose=False)
 
+            # get_score() is the correct API; get_fscore() is deprecated and
+            # does not accept importance_type in some XGBoost versions
+            _fscore = self._xgb.get_booster().get_score(importance_type="gain")
             self.feature_importance_ = pd.DataFrame({
                 "feature": self.feature_cols,
-                "gain":  list(self._xgb.get_booster().get_fscore(
-                    importance_type="gain"
-                ).get(f"f{i}", 0.0) for i in range(len(self.feature_cols))),
+                "gain": [_fscore.get(f"f{i}", 0.0) for i in range(len(self.feature_cols))],
             }).sort_values("gain", ascending=False)
 
         # --- Logistic Regression ---
@@ -807,13 +808,15 @@ class KnockoutModel:
         further splits by stage_order: A = stage_order in {2, 3} (R32/R16),
         B = stage_order in {4, 5, 6, 7} (QF/SF/Final).
         """
+        _idx = training_rows.index
         ko_rows = training_rows[
-            training_rows.get("is_knockout", pd.Series(False)).astype(bool)
-            | (training_rows.get("stage_order", pd.Series(1)).astype(float) > 1)
+            training_rows.get("is_knockout", pd.Series(False, index=_idx)).astype(bool)
+            | (training_rows.get("stage_order", pd.Series(1, index=_idx)).astype(float) > 1)
         ].copy()
 
         # Stage A: Round of 32 / Round of 16 (stage_order 2–3)
-        stage_a = ko_rows[ko_rows.get("stage_order", pd.Series(1)).astype(float).isin([2.0, 3.0])]
+        _ko_idx = ko_rows.index
+        stage_a = ko_rows[ko_rows.get("stage_order", pd.Series(1, index=_ko_idx)).astype(float).isin([2.0, 3.0])]
         if len(stage_a) > 0:
             X_a, y_a, sw_a = self._prep_ko(stage_a, KO_STAGE_A_FEATURES)
             if _XGB_AVAILABLE:
@@ -827,7 +830,7 @@ class KnockoutModel:
             self._stage_a_lr = lr_a
 
         # Stage B: QF/SF/Final (stage_order 4–7)
-        stage_b = ko_rows[ko_rows.get("stage_order", pd.Series(1)).astype(float) >= 4.0]
+        stage_b = ko_rows[ko_rows.get("stage_order", pd.Series(1, index=_ko_idx)).astype(float) >= 4.0]
         if len(stage_b) > 0:
             X_b, y_b, sw_b = self._prep_ko(stage_b, KO_STAGE_B_FEATURES)
             # Primary: strong LR (C=0.1 per design spec §8)
@@ -1556,7 +1559,7 @@ class WCForecastEnsemble:
         # --- Knockout model ---
         # WC-only: knockout matches from DS8 (stage_order > 1)
         ko_rows = wc_training_rows[
-            wc_training_rows.get("stage_order", pd.Series(1)) > 1
+            wc_training_rows.get("stage_order", pd.Series(1, index=wc_training_rows.index)) > 1
         ].copy() if "stage_order" in wc_training_rows.columns else pd.DataFrame()
 
         if not ko_rows.empty:

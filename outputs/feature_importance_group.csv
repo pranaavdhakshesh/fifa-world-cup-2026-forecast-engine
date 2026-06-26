@@ -1,0 +1,17 @@
+,feature,gain
+1,elo_win_expectancy,3.0964977741241455
+2,elo_rating_delta,2.9214327335357666
+0,elo_rating,2.1815013885498047
+8,wc_win_rate_modern,2.139808416366577
+13,form_win_rate_last10,2.136643648147583
+10,wc_gd_per_game_modern,2.0334582328796387
+9,wc_win_rate_knockout_modern,2.0280637741088867
+11,wc_group_vs_knockout_uplift,1.8064982891082764
+14,form_gd_last10,1.79616379737854
+3,elo_is_host,0.0
+4,fifa_points,0.0
+5,fifa_points_delta,0.0
+6,fifa_points_4yr_change,0.0
+7,elo_fifa_rank_disagreement,0.0
+12,wc_debut_modern_flag,0.0
+15,confederation,0.0

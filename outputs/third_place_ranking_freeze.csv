@@ -1,0 +1,13 @@
+team,group,pts,w,d,l,gf,ga,gd,matches_played,group_rank,third_place_rank,qualifies_as_third
+Sweden,F,3,1,0,1,6,6,0,2,3,1,True
+Scotland,C,3,1,0,1,1,1,0,2,3,2,True
+Croatia,L,3,1,0,1,3,4,-1,2,3,3,True
+Paraguay,D,3,1,0,1,2,4,-2,2,3,4,True
+Algeria,J,3,1,0,1,2,4,-2,2,3,5,True
+Cape Verde,H,2,0,2,0,2,2,0,2,3,6,True
+Belgium,G,2,0,2,0,1,1,0,2,3,7,True
+Czechia,A,1,0,1,1,2,3,-1,2,3,8,True
+Congo DR,K,1,0,1,1,1,2,-1,2,3,9,False
+Ecuador,E,1,0,1,1,0,1,-1,2,3,10,False
+Bosnia-Herzegovina,B,1,0,1,1,2,5,-3,2,3,11,False
+Senegal,I,0,0,0,2,3,6,-3,2,3,12,False
