@@ -661,7 +661,8 @@ class GroupStageModel:
 
     def _predict_raw_xgb(self, X: pd.DataFrame) -> np.ndarray:
         if self._xgb is not None:
-            raw = self._xgb.predict_proba(X.values)
+            X_num = X.apply(pd.to_numeric, errors="coerce")
+            raw = self._xgb.predict_proba(X_num.values)
             # XGBoost outputs [P(0), P(1), P(2)] = [P(LOSS), P(DRAW), P(WIN)] ✓
             return raw
         elif self._lr_pipeline is not None:
